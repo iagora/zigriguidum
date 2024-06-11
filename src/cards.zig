@@ -13,7 +13,7 @@ pub const DevelopmentCard = struct {
     gemBonus: ?GemColor,
 };
 
-const deck: []DevelopmentCard = &[_]DevelopmentCard{
+pub const deck: []DevelopmentCard = &[_]DevelopmentCard{
     DevelopmentCard{
         .tier = 1,
         .cost = [5]u8{ 1, 1, 1, 1, 0 },

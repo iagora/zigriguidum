@@ -3,7 +3,7 @@ pub const NobleTile = struct {
     prestigePoints: u8,
 };
 
-const nobles: []NobleTile = &[_]NobleTile{
+pub const nobles: []NobleTile = &[_]NobleTile{
     NobleTile{ // Mary Stuart
         .requirements = [5]u8{ 4, 0, 4, 0, 0 },
         .prestigePoints = 3,
