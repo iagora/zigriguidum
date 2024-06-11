@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub const GemColor = enum {
     Emerald,
     Sapphire,
@@ -13,7 +15,36 @@ pub const DevelopmentCard = struct {
     gemBonus: ?GemColor,
 };
 
-pub const deck: []DevelopmentCard = &[_]DevelopmentCard{
+pub fn initialize(allocator: std.mem.Allocator) ![]std.ArrayList(DevelopmentCard) {
+    var prng = std.Random.DefaultPrng.init(blk: {
+        var seed: u64 = undefined;
+        try std.posix.getrandom(std.mem.asBytes(&seed));
+        break :blk seed;
+    });
+
+    const devCards = try allocator.alloc(std.ArrayList(DevelopmentCard), 3);
+    var deck = std.ArrayList(DevelopmentCard).init(allocator);
+    for (deck1) |card| {
+        try deck.append(card);
+        std.Random.shuffle(prng.random(), DevelopmentCard, deck.items);
+        devCards[0] = deck;
+    }
+    deck = std.ArrayList(DevelopmentCard).init(allocator);
+    for (deck2) |card| {
+        try deck.append(card);
+        std.Random.shuffle(prng.random(), DevelopmentCard, deck.items);
+        devCards[1] = deck;
+    }
+    deck = std.ArrayList(DevelopmentCard).init(allocator);
+    for (deck3) |card| {
+        try deck.append(card);
+        std.Random.shuffle(prng.random(), DevelopmentCard, deck.items);
+        devCards[2] = deck;
+    }
+    return devCards;
+}
+
+pub const deck1 = [_]DevelopmentCard{
     DevelopmentCard{
         .tier = 1,
         .cost = [5]u8{ 1, 1, 1, 1, 0 },
@@ -254,6 +285,9 @@ pub const deck: []DevelopmentCard = &[_]DevelopmentCard{
         .prestigePoints = 1,
         .gemBonus = GemColor.Ruby,
     },
+};
+
+pub const deck2 = [_]DevelopmentCard{
     DevelopmentCard{
         .tier = 2,
         .cost = [5]u8{ 2, 2, 0, 3, 0 },
@@ -434,6 +468,9 @@ pub const deck: []DevelopmentCard = &[_]DevelopmentCard{
         .prestigePoints = 3,
         .gemBonus = GemColor.Ruby,
     },
+};
+
+pub const deck3 = [_]DevelopmentCard{
     DevelopmentCard{
         .tier = 3,
         .cost = [5]u8{ 5, 3, 3, 3, 0 },

@@ -29,27 +29,7 @@ pub const Game = struct {
         game.goldTokens = 5;
 
         // Initialize development cards
-        game.developmentCards = try allocator.alloc(std.ArrayList(cm.DevelopmentCard), 3);
-        for (0..3) |t| {
-            var deck = std.ArrayList(cm.DevelopmentCard).init(allocator); // Assuming max 40 cards per tier
-            // Populate deck with cards (placeholder example)
-            for (0..40) |_| {
-                try deck.append(cm.DevelopmentCard{
-                    .tier = @intCast(t + 1),
-                    .cost = [5]u8{ 1, 1, 1, 1, 0 }, // Example cost
-                    .prestigePoints = 1,
-                    .gemBonus = cm.GemColor.Emerald, // Example bonus
-                });
-            }
-            // Shuffle deck
-            var prng = std.Random.DefaultPrng.init(blk: {
-                var seed: u64 = undefined;
-                try std.posix.getrandom(std.mem.asBytes(&seed));
-                break :blk seed;
-            });
-            std.Random.shuffle(prng.random(), cm.DevelopmentCard, deck.items);
-            game.developmentCards[t] = deck;
-        }
+        game.developmentCards = try cm.initialize(allocator);
 
         // Initialize noble tiles
         game.nobleTiles = std.ArrayList(nm.NobleTile).init(allocator);
