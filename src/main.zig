@@ -14,7 +14,6 @@ const GemColor = enum {
     Ruby,
     Diamond,
     Onyx,
-    Gold,
 };
 
 const DevelopmentCard = struct {
