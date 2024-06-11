@@ -16,11 +16,7 @@ pub const Game = struct {
         // Initialize players
         game.players = try allocator.alloc(pm.Player, numPlayers);
         for (game.players) |*p| {
-            p.tokens = [5]u8{ 0, 0, 0, 0, 0 };
-            p.goldTokens = 0;
-            p.purchasedCards = std.ArrayList(cm.DevelopmentCard).init(allocator);
-            p.reservedCards = std.ArrayList(cm.DevelopmentCard).init(allocator);
-            p.prestigePoints = 0;
+            p.initialize(allocator);
         }
 
         // Initialize gem tokens
