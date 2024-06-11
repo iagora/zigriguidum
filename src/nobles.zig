@@ -1,9 +1,29 @@
+const std = @import("std");
+
 pub const NobleTile = struct {
     requirements: [5]u8, // Number of each type of gem required
     prestigePoints: u8,
 };
 
-pub const nobles: []NobleTile = &[_]NobleTile{
+pub fn initialize(numPlayers: u8, allocator: std.mem.Allocator) !std.ArrayList(NobleTile) {
+    var ignobles = std.ArrayList(NobleTile).init(allocator);
+    for (0..(numPlayers + 1)) |_| {
+        try ignobles.append(NobleTile{
+            .requirements = [5]u8{ 3, 3, 3, 0, 0 }, // Example requirements
+            .prestigePoints = 3,
+        });
+    }
+    // Shuffle noble tiles
+    var prng = std.Random.DefaultPrng.init(blk: {
+        var seed: u64 = undefined;
+        try std.posix.getrandom(std.mem.asBytes(&seed));
+        break :blk seed;
+    });
+    std.Random.shuffle(prng.random(), NobleTile, ignobles.items);
+    return ignobles;
+}
+
+pub const nobles = [_]NobleTile{
     NobleTile{ // Mary Stuart
         .requirements = [5]u8{ 4, 0, 4, 0, 0 },
         .prestigePoints = 3,

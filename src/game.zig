@@ -32,20 +32,7 @@ pub const Game = struct {
         game.developmentCards = try cm.initialize(allocator);
 
         // Initialize noble tiles
-        game.nobleTiles = std.ArrayList(nm.NobleTile).init(allocator);
-        for (0..(numPlayers + 1)) |_| {
-            try game.nobleTiles.append(nm.NobleTile{
-                .requirements = [5]u8{ 3, 3, 3, 0, 0 }, // Example requirements
-                .prestigePoints = 3,
-            });
-        }
-        // Shuffle noble tiles
-        var prng = std.Random.DefaultPrng.init(blk: {
-            var seed: u64 = undefined;
-            try std.posix.getrandom(std.mem.asBytes(&seed));
-            break :blk seed;
-        });
-        std.Random.shuffle(prng.random(), nm.NobleTile, game.nobleTiles.items[0..]);
+        game.nobleTiles = try nm.initialize(numPlayers, allocator);
 
         // Reveal initial cards for each tier
         for (0..3) |t| {
