@@ -1,4 +1,4 @@
-const NobleTile = struct {
+pub const NobleTile = struct {
     requirements: [5]u8, // Number of each type of gem required
     prestigePoints: u8,
 };

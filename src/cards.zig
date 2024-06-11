@@ -1,4 +1,4 @@
-const GemColor = enum {
+pub const GemColor = enum {
     Emerald,
     Sapphire,
     Ruby,
@@ -6,7 +6,7 @@ const GemColor = enum {
     Onyx,
 };
 
-const DevelopmentCard = struct {
+pub const DevelopmentCard = struct {
     tier: u8,
     cost: [5]u8, // Cost in gem tokens by color
     prestigePoints: u8,
