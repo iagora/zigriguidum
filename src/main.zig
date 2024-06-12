@@ -15,15 +15,21 @@ pub fn main() void {
     };
 
     // gm.Game loop
-    while (!game.isGameOver()) {
+    var round: usize = 0;
+    gblk: while (!game.isGameOver()) {
         // Print game state for debugging purposes
-        game.printGameState();
+        game.printGameState(round);
 
         for (game.players) |*p| {
             // Perform player turn
             game.playerTurn(p) catch |err| {
                 std.debug.print("Error during player turn: {}\n", .{err});
             };
+        }
+        round += 1;
+        if (round >= 100) {
+            std.debug.print("Game running for too long without a winner!\n", .{});
+            break :gblk;
         }
     }
 

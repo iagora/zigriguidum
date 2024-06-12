@@ -199,15 +199,9 @@ pub const Game = struct {
         return false;
     }
 
-    pub fn printGameState(self: *Game) void {
-        std.debug.print("\nGame State:\n\n", .{});
-        // Reveal all players status
-        for (self.players, 0..) |player, idx| {
-            std.debug.print("Player {}:\n", .{idx + 1});
-            player.print();
-        }
-
-        std.debug.print("\tGem Tokens: {any}\tGold Tokens: {}\n", .{ self.gemTokens, self.goldTokens });
+    pub fn printGameState(self: *Game, round: usize) void {
+        std.debug.print("\nGame State: Round: {}\n\n", .{round + 1});
+        std.debug.print("\tGem Tokens: {any}\tGold Tokens: {}\n\n", .{ self.gemTokens, self.goldTokens });
         // Reveal cards for each tier
         for (0..3) |t| {
             std.debug.print("Tier {}:\n", .{t + 1});
@@ -216,6 +210,12 @@ pub const Game = struct {
                 if (index == 3) break :fblk;
             }
             std.debug.print("\n", .{});
+        }
+
+        // Reveal all players status
+        for (self.players, 0..) |player, idx| {
+            std.debug.print("Player {}:\n", .{idx + 1});
+            player.print();
         }
     }
 
