@@ -84,10 +84,12 @@ const AIPlayer = struct {
     }
 
     pub fn takeTurn(self: *AIPlayer, game_state: *gm.Game, allocator: *std.mem.Allocator) !void {
+        self.turn_counter += 1;
+
         const tt = struct {
             fn scanGoodCards(ai: *AIPlayer, tier: u8, gs: *gm.Game) !void {
-                if (ai.turgs > ai.turns_to_care_per_tier[tier][0] and ai.turn_counter < ai.turns_to_care_per_tier[tier][1]) {
-                    for (gs.developmentCards[tier]) |*card| {
+                if (ai.turn_counter > ai.turns_to_care_per_tier[tier][0] and ai.turn_counter < ai.turns_to_care_per_tier[tier][1]) {
+                    for (gs.developmentCards[tier].items) |*card| {
                         if (card.cost.total() <= ai.max_cost_per_tier[tier]) {
                             ai.care_about_this = try allocator.append(ai.care_about_this, card);
                         }
@@ -119,7 +121,6 @@ const AIPlayer = struct {
             }
         }
 
-        self.turn_counter += 1;
         std.debug.print("This is turn {}\n", .{self.turn_counter});
         std.debug.print("I care about {}\n", .{self.care_about_this});
         std.debug.print("My goal is currently {}\n", .{self.goal_card.cost});
