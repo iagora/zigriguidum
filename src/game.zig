@@ -34,12 +34,6 @@ pub const Game = struct {
         // Initialize noble tiles
         game.nobleTiles = try nm.initialize(numPlayers, allocator);
 
-        // Reveal initial cards for each tier
-        for (0..3) |t| {
-            for (0..4) |index| {
-                game.developmentCards[t].items[index] = game.developmentCards[t].items[index];
-            }
-        }
         return game;
     }
 
@@ -173,9 +167,7 @@ pub const Game = struct {
 
         // Count the number of each type of gem bonus from purchased cards
         for (player.purchasedCards.items) |pCard| {
-            if (pCard.gemBonus) |bonus| {
-                bonusCount[@intFromEnum(bonus)] += 1;
-            }
+            bonusCount[@intFromEnum(pCard.gemBonus)] += 1;
         }
 
         // Check if the player meets the requirements for any noble tile
@@ -208,9 +200,22 @@ pub const Game = struct {
     }
 
     pub fn printGameState(self: *Game) void {
-        std.debug.print("Game State:\n", .{});
-        for (self.players, 0..) |p, index| {
-            std.debug.print("pm.Player {}: {} prestige points\n", .{ index + 1, p.prestigePoints });
+        std.debug.print("\nGame State:\n\n", .{});
+        // Reveal all players status
+        for (self.players, 0..) |player, idx| {
+            std.debug.print("Player {}:\n", .{idx + 1});
+            player.print();
+        }
+
+        std.debug.print("\tGem Tokens: {any}\tGold Tokens: {}\n", .{ self.gemTokens, self.goldTokens });
+        // Reveal cards for each tier
+        for (0..3) |t| {
+            std.debug.print("Tier {}:\n", .{t + 1});
+            fblk: for (self.developmentCards[t].items, 0..) |card, index| {
+                card.print();
+                if (index == 3) break :fblk;
+            }
+            std.debug.print("\n", .{});
         }
     }
 

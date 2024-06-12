@@ -16,15 +16,15 @@ pub fn main() void {
 
     // gm.Game loop
     while (!game.isGameOver()) {
+        // Print game state for debugging purposes
+        game.printGameState();
+
         for (game.players) |*p| {
             // Perform player turn
             game.playerTurn(p) catch |err| {
                 std.debug.print("Error during player turn: {}\n", .{err});
             };
         }
-
-        // Print game state for debugging purposes
-        game.printGameState();
     }
 
     // gm.Game over

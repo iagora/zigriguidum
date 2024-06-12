@@ -12,7 +12,18 @@ pub const DevelopmentCard = struct {
     tier: u8,
     cost: [5]u8, // Cost in gem tokens by color
     prestigePoints: u8,
-    gemBonus: ?GemColor,
+    gemBonus: GemColor,
+
+    pub fn print(self: DevelopmentCard) void {
+        const color = switch (self.gemBonus) {
+            GemColor.Emerald => "emerald",
+            GemColor.Sapphire => "sapphire",
+            GemColor.Ruby => "ruby",
+            GemColor.Diamond => "diamond",
+            GemColor.Onyx => "onyx",
+        };
+        std.debug.print("cost: {any}\tprestige: {}\tcolor: {s} {{{any}}}\n", .{ self.cost, self.prestigePoints, color, @intFromEnum(self.gemBonus) + 1 });
+    }
 };
 
 pub fn initialize(allocator: std.mem.Allocator) ![]std.ArrayList(DevelopmentCard) {
