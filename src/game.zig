@@ -2,6 +2,7 @@ const std = @import("std");
 const pm = @import("player.zig");
 const cm = @import("cards.zig");
 const nm = @import("nobles.zig");
+const am = @import("action.zig");
 
 pub const Game = struct {
     players: []pm.Player,
@@ -123,9 +124,7 @@ pub const Game = struct {
         // Calculate the cost after considering player's gem bonuses
         var remainingCost = card.cost;
         for (player.purchasedCards.items) |pCard| {
-            if (pCard.gemBonus) |bonus| {
-                remainingCost[@intFromEnum(bonus)] -= 1;
-            }
+            remainingCost[@intFromEnum(pCard.gemBonus)] -= 1;
         }
 
         // Check if the player has enough tokens (including gold tokens)
@@ -164,7 +163,7 @@ pub const Game = struct {
         }
     }
 
-    fn checkNobleTiles(self: *Game, player: *pm.Player, p_number: usize) !void {
+    fn checkNobleTiles(self: *Game, player: *pm.Player, pNumber: usize) !void {
         // Check if player can claim any noble tiles
         var bonusCount = [5]u8{ 0, 0, 0, 0, 0 };
 
@@ -190,7 +189,7 @@ pub const Game = struct {
                 // Remove the claimed noble tile from the game
                 _ = self.nobleTiles.orderedRemove(index);
 
-                std.debug.print("Player {} earned a visit from {s}\n\n", .{ p_number, tile.name });
+                std.debug.print("Player {} earned a visit from {s}\n\n", .{ pNumber, tile.name });
             }
         }
     }
@@ -206,60 +205,73 @@ pub const Game = struct {
         return false;
     }
 
-    pub fn printGameState(self: *Game) void {
+    pub fn generateGameState(self: Game, allocator: std.mem.Allocator) !Game {
+        var gs = Game{
+            .players = self.players,
+            .gemTokens = self.gemTokens,
+            .goldTokens = self.goldTokens,
+            .developmentCards = try allocator.alloc(std.ArrayList(cm.DevelopmentCard), 3),
+            .nobleTiles = self.nobleTiles,
+            .round = self.round,
+        };
+        for (0..3) |t| {
+            var deck = std.ArrayList(cm.DevelopmentCard).init(allocator);
+            fblk: for (self.developmentCards[t].items, 0..) |card, idx| {
+                try deck.append(card);
+                if (idx >= 3) break :fblk;
+            }
+            gs.developmentCards[t] = deck;
+        }
+
+        return gs;
+    }
+
+    pub fn print(self: Game) void {
         std.debug.print("Begin: Round {}\n\n", .{self.round});
         std.debug.print("\tGem Tokens: {any}\tGold Tokens: {}\n\n", .{ self.gemTokens, self.goldTokens });
         // Reveal cards for each tier
         for (0..3) |t| {
             std.debug.print("Tier {}:\n", .{t + 1});
-            fblk: for (self.developmentCards[t].items, 0..) |card, index| {
+            for (self.developmentCards[t].items) |card| {
                 card.print();
-                if (index == 3) break :fblk;
             }
             std.debug.print("\n", .{});
         }
     }
 
-    pub fn playerTurn(self: *Game, player: *pm.Player, p_number: usize) !void {
+    pub fn turn(self: *Game, action: am.Action, player: *pm.Player, pNumber: usize) !void {
         // Example turn sequence:
         // In a real game, you would take input from the player
         // Here, we'll simulate a simple token-taking action for demonstration
-        const action = 0; // 0: Take Tokens, 1: Reserve Card, 2: Purchase Card
 
-        switch (action) {
-            0 => {
+        switch (action.actionType) {
+            am.ActionType.TakeTokens => {
                 // Simulate taking 3 different tokens
-                const tokens = [5]u8{ 1, 1, 1, 0, 0 };
-                try self.takeTokens(player, tokens);
-                std.debug.print("Player {} took {any} tokens\n\n", .{ p_number, tokens });
+                try self.takeTokens(player, action.tokens);
+                std.debug.print("Player {} took {any} tokens\n\n", .{ pNumber, action.tokens });
             },
-            1 => {
+            am.ActionType.ReserveCard => {
                 // Simulate reserving a card from tier 1, index 0
-                const cardIndex = 0;
-                const tier = 1;
-                try self.reserveCard(player, cardIndex, tier);
-                std.debug.print("Player {} reserved a card\n\n", .{p_number});
+                try self.reserveCard(player, action.cardIndex.?, action.tier.?);
+                std.debug.print("Player {} reserved a card\n\n", .{pNumber});
             },
-            2 => {
+            am.ActionType.PurchaseCard => {
                 // Simulate purchasing a card from tier 1, index 0
-                const cardIndex = 0;
-                const tier = 1;
                 const fromReserve = false;
-                try self.purchaseCard(player, cardIndex, tier, fromReserve);
+                try self.purchaseCard(player, action.cardIndex.?, action.tier.?, action.fromReserve.?);
                 if (fromReserve) {
-                    std.debug.print("Player {} bought a card from reserve\n\n", .{p_number});
+                    std.debug.print("Player {} bought a card from reserve\n\n", .{pNumber});
                 } else {
-                    std.debug.print("Player {} bought a card from the table\n\n", .{p_number});
+                    std.debug.print("Player {} bought a card from the table\n\n", .{pNumber});
                 }
             },
-            else => return error.InvalidMove,
         }
 
         // Check if the player can claim any noble tiles
-        try self.checkNobleTiles(player, p_number);
+        try self.checkNobleTiles(player, pNumber);
 
         // Reveal players status
-        std.debug.print("Player {}:\n", .{p_number});
+        std.debug.print("Player {}:\n", .{pNumber});
         player.print();
     }
 };

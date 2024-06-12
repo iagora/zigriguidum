@@ -20,12 +20,22 @@ pub fn main() !void {
     // gm.Game loop
     gblk: while (!game.isGameOver()) {
         // Print game state for debugging purposes
-        game.printGameState();
+        var gameState = try game.generateGameState(allocator);
+        gameState.print();
 
-        for (game.players, 1..) |*p, idx| {
+        // Give each player a turn
+        for (game.players, 1..) |*p, pn| {
+            // Generate the game state to present to player;
+            gameState = try game.generateGameState(allocator);
+
+            // This is where I can serialize the game state to a json send it to anyone.
+            // Player receives the game state, outputs an action that could potentially be
+            // serialized, game receives the action and tries to apply it
+            const action = p.play(gameState);
+
             // Perform player turn
-            game.playerTurn(p, idx) catch |err| {
-                std.debug.print("Error during player {}'s turn: {}\n", .{ idx, err });
+            game.turn(action, p, pn) catch |err| {
+                std.debug.print("Error during player {}'s turn: {}\n", .{ pn, err });
             };
         }
         if (game.round >= 100) {

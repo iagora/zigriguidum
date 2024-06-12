@@ -1,6 +1,8 @@
 const std = @import("std");
 const cm = @import("cards.zig");
 const nm = @import("nobles.zig");
+const am = @import("action.zig");
+const gm = @import("game.zig");
 
 pub const Player = struct {
     tokens: [5]u8, // Number of each type of gem tokens
@@ -22,6 +24,12 @@ pub const Player = struct {
             .isAI = isAI,
         };
         return player;
+    }
+
+    pub fn play(self: Player, gameState: gm.Game) am.Action {
+        _ = gameState;
+        _ = self;
+        return am.Action.takeTokens([5]u8{ 1, 1, 1, 0, 0 });
     }
 
     pub fn print(self: Player) void {
