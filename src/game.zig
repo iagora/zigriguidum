@@ -253,12 +253,12 @@ pub const Game = struct {
             else => return error.InvalidMove,
         }
 
+        // Check if the player can claim any noble tiles
+        try self.checkNobleTiles(player, p_number);
+
         // Reveal players status
         std.debug.print("Player {}:\n", .{p_number});
         player.print();
-
-        // Check if the player can claim any noble tiles
-        try self.checkNobleTiles(player, p_number);
     }
 };
 
