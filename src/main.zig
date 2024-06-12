@@ -1,15 +1,18 @@
 const std = @import("std");
 const gm = @import("game.zig");
+const pm = @import("player.zig");
 
-pub fn main() void {
+pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const gpa_allocator = gpa.allocator();
     var arena = std.heap.ArenaAllocator.init(gpa_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
+    var players = [_]pm.Player{ pm.Player.create(true, allocator), pm.Player.create(true, allocator) };
+
     // Initialize game state
-    var game: gm.Game = gm.Game.initialize(2, allocator) catch |err| {
+    var game: gm.Game = gm.Game.initialize(&players, allocator) catch |err| {
         std.debug.print("Can't initialize game: {}\n", .{err});
         return;
     };

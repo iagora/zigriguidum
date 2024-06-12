@@ -11,59 +11,61 @@ pub const Game = struct {
     nobleTiles: std.ArrayList(nm.NobleTile),
     round: u16,
 
-    pub fn initialize(numPlayers: u8, allocator: std.mem.Allocator) !Game {
-        // Initialize game state
-        var game = Game{ .players = undefined, .gemTokens = undefined, .goldTokens = undefined, .developmentCards = undefined, .nobleTiles = undefined, .round = 0 };
-        // Initialize players
-        game.players = try allocator.alloc(pm.Player, numPlayers);
-        for (game.players) |*p| {
-            p.initialize(allocator);
-        }
-
+    pub fn initialize(players: []pm.Player, allocator: std.mem.Allocator) !Game {
         // Initialize gem tokens
-        const tokenCount: u8 = switch (numPlayers) {
+        const tokenCount: u8 = switch (players.len) {
             2 => 4,
             3 => 5,
             else => 7,
         };
-        game.gemTokens = [5]u8{ tokenCount, tokenCount, tokenCount, tokenCount, tokenCount };
-        game.goldTokens = 5;
-
-        // Initialize development cards
-        game.developmentCards = try cm.initialize(allocator);
-
-        // Initialize noble tiles
-        game.nobleTiles = try nm.initialize(numPlayers, allocator);
-
-        return game;
+        // Initialize game state
+        return Game{ .players = players, .gemTokens = [5]u8{ tokenCount, tokenCount, tokenCount, tokenCount, tokenCount }, .goldTokens = 5, .developmentCards = try cm.initialize(allocator), .nobleTiles = try nm.initialize(players.len, allocator), .round = 0 };
     }
 
     fn takeTokens(self: *Game, player: *pm.Player, tokens: [5]u8) !void {
         // Logic for taking tokens
         // Count the number of tokens being taken
-        var totalTokens: u8 = 0;
+        var totalRequested: u8 = 0;
         for (tokens) |t| {
-            totalTokens += t;
+            totalRequested += t;
+        }
+
+        // Calculate the player's current total tokens
+        var playerTotal: u8 = 0;
+        for (player.tokens) |t| {
+            playerTotal += t;
         }
 
         // Ensure the action is valid
-        if (totalTokens > 3) {
+        if (playerTotal + totalRequested > 10) {
+            return error.InvalidMove; // Cannot exceed 10 tokens
+        }
+
+        if (totalRequested > 3) {
             return error.InvalidMove; // Cannot take more than 3 tokens
         }
 
         var differentColors: u8 = 0;
+        var sameColorCount: u8 = 0;
         for (0..5) |index| {
             if (tokens[index] > 0) {
                 differentColors += 1;
+                if (tokens[index] == 2) {
+                    if (self.gemTokens[index] < 4) {
+                        return error.InvalidMove; // Cannot take 2 tokens from a color with less than 4 tokens
+                    }
+                    sameColorCount += 1;
+                }
             }
         }
 
-        if (differentColors > 3 or differentColors == 2) {
+        if (differentColors > 3) {
             return error.InvalidMove; // Cannot take more than 3 different colors
         }
 
-        if (differentColors == 1 and totalTokens != 2) {
-            return error.InvalidMove; // Must take exactly 2 tokens of the same color
+        if (sameColorCount > 1 or (sameColorCount == 1 and totalRequested > 2)) {
+            // Cannot take 2 tokens from more than one color or take more than 2 tokens of the same color
+            return error.InvalidMove;
         }
 
         // Check for sufficient tokens in the bank

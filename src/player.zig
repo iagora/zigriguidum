@@ -11,13 +11,17 @@ pub const Player = struct {
     nobleTiles: std.ArrayList(nm.NobleTile),
     isAI: bool,
 
-    pub fn initialize(self: *Player, allocator: std.mem.Allocator) void {
-        self.tokens = [5]u8{ 0, 0, 0, 0, 0 };
-        self.goldTokens = 0;
-        self.purchasedCards = std.ArrayList(cm.DevelopmentCard).init(allocator);
-        self.reservedCards = std.ArrayList(cm.DevelopmentCard).init(allocator);
-        self.prestigePoints = 0;
-        self.nobleTiles = std.ArrayList(nm.NobleTile).init(allocator);
+    pub fn create(isAI: bool, allocator: std.mem.Allocator) Player {
+        const player = Player{
+            .tokens = [5]u8{ 0, 0, 0, 0, 0 },
+            .goldTokens = 0,
+            .purchasedCards = std.ArrayList(cm.DevelopmentCard).init(allocator),
+            .reservedCards = std.ArrayList(cm.DevelopmentCard).init(allocator),
+            .prestigePoints = 0,
+            .nobleTiles = std.ArrayList(nm.NobleTile).init(allocator),
+            .isAI = isAI,
+        };
+        return player;
     }
 
     pub fn print(self: Player) void {

@@ -6,7 +6,7 @@ pub const NobleTile = struct {
     prestigePoints: u8,
 };
 
-pub fn initialize(numPlayers: u8, allocator: std.mem.Allocator) !std.ArrayList(NobleTile) {
+pub fn initialize(numPlayers: usize, allocator: std.mem.Allocator) !std.ArrayList(NobleTile) {
     var noblesCP = nobles;
     // Shuffle noble tiles
     var prng = std.Random.DefaultPrng.init(blk: {

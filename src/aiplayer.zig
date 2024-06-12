@@ -54,16 +54,9 @@ const AIPlayer = struct {
     max_to_pay: u8,
     too_far: u8,
 
-    pub fn initialize(allocator: *std.mem.Allocator) !AIPlayer {
+    pub fn create(allocator: *std.mem.Allocator) !AIPlayer {
         return AIPlayer{
-            .player = pm.Player{
-                .tokens = [5]u8{},
-                .goldTokens = 0,
-                .purchasedCards = try allocator.alloc(cm.DevelopmentCard, 0),
-                .reservedCards = try allocator.alloc(cm.DevelopmentCard, 0),
-                .prestigePoints = 0,
-                .nobleTiles = try allocator.alloc(nm.NobleTile, 0),
-            },
+            .player = pm.Player.create(true, allocator),
             .turn_counter = 1,
             .care_about_this = try allocator.alloc(cm.DevelopmentCard, 0),
             .goal_card = cm.DevelopmentCard{
