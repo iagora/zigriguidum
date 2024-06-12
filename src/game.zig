@@ -87,7 +87,7 @@ pub const Game = struct {
         if (tier < 1 or tier > 3) {
             return error.InvalidTier;
         }
-        if (cardIndex >= self.developmentCards[tier - 1].items.len) {
+        if (cardIndex >= self.developmentCards[tier - 1].items.len or cardIndex >= 4) {
             return error.InvalidCardIndex;
         }
 
@@ -113,7 +113,7 @@ pub const Game = struct {
             break :blk player.reservedCards.items[cardIndex];
         } else eblk: {
             if (tier < 1 or tier > 3) return error.InvalidTier;
-            if (cardIndex >= self.developmentCards[tier - 1].items.len) return error.InvalidCardIndex;
+            if (cardIndex >= self.developmentCards[tier - 1].items.len or cardIndex >= 4) return error.InvalidCardIndex;
             break :eblk self.developmentCards[tier - 1].items[cardIndex];
         };
 
