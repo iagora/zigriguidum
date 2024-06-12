@@ -9,10 +9,11 @@ pub const Game = struct {
     goldTokens: u8,
     developmentCards: []std.ArrayList(cm.DevelopmentCard), // 3 tiers of cards
     nobleTiles: std.ArrayList(nm.NobleTile),
+    round: u16,
 
     pub fn initialize(numPlayers: u8, allocator: std.mem.Allocator) !Game {
         // Initialize game state
-        var game = Game{ .players = undefined, .gemTokens = undefined, .goldTokens = undefined, .developmentCards = undefined, .nobleTiles = undefined };
+        var game = Game{ .players = undefined, .gemTokens = undefined, .goldTokens = undefined, .developmentCards = undefined, .nobleTiles = undefined, .round = 0 };
         // Initialize players
         game.players = try allocator.alloc(pm.Player, numPlayers);
         for (game.players) |*p| {
@@ -196,11 +197,13 @@ pub const Game = struct {
                 return true;
             }
         }
+        if (self.round > 0) std.debug.print("End: Round {}.\n\n", .{self.round});
+        self.round += 1;
         return false;
     }
 
-    pub fn printGameState(self: *Game, round: usize) void {
-        std.debug.print("\nGame State: Round: {}\n\n", .{round + 1});
+    pub fn printGameState(self: *Game) void {
+        std.debug.print("Begin: Round {}\n\n", .{self.round});
         std.debug.print("\tGem Tokens: {any}\tGold Tokens: {}\n\n", .{ self.gemTokens, self.goldTokens });
         // Reveal cards for each tier
         for (0..3) |t| {
@@ -211,15 +214,9 @@ pub const Game = struct {
             }
             std.debug.print("\n", .{});
         }
-
-        // Reveal all players status
-        for (self.players, 0..) |player, idx| {
-            std.debug.print("Player {}:\n", .{idx + 1});
-            player.print();
-        }
     }
 
-    pub fn playerTurn(self: *Game, player: *pm.Player) !void {
+    pub fn playerTurn(self: *Game, player: *pm.Player, p_number: u8) !void {
         // Example turn sequence:
         // In a real game, you would take input from the player
         // Here, we'll simulate a simple token-taking action for demonstration
@@ -230,12 +227,14 @@ pub const Game = struct {
                 // Simulate taking 3 different tokens
                 const tokens = [5]u8{ 1, 1, 1, 0, 0 };
                 try self.takeTokens(player, tokens);
+                std.debug.print("Player {} took {any} tokens\n\n", .{ p_number, tokens });
             },
             1 => {
                 // Simulate reserving a card from tier 1, index 0
                 const cardIndex = 0;
                 const tier = 1;
                 try self.reserveCard(player, cardIndex, tier);
+                std.debug.print("Player {} reserved a card\n\n", .{p_number});
             },
             2 => {
                 // Simulate purchasing a card from tier 1, index 0
@@ -243,9 +242,18 @@ pub const Game = struct {
                 const tier = 1;
                 const fromReserve = false;
                 try self.purchaseCard(player, cardIndex, tier, fromReserve);
+                if (fromReserve) {
+                    std.debug.print("Player {} bought a card from reserve\n\n", .{p_number});
+                } else {
+                    std.debug.print("Player {} bought a card from the table\n\n", .{p_number});
+                }
             },
             else => return error.InvalidMove,
         }
+
+        // Reveal players status
+        std.debug.print("Player {}:\n", .{p_number});
+        player.print();
 
         // Check if the player can claim any noble tiles
         try self.checkNobleTiles(player);
