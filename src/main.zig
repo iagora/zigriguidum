@@ -21,7 +21,7 @@ pub fn main() void {
 
         for (game.players, 1..) |*p, idx| {
             // Perform player turn
-            game.playerTurn(p, @intCast(idx)) catch |err| {
+            game.playerTurn(p, idx) catch |err| {
                 std.debug.print("Error during player {}'s turn: {}\n", .{ idx, err });
             };
         }

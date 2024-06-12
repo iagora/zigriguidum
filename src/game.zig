@@ -162,7 +162,7 @@ pub const Game = struct {
         }
     }
 
-    fn checkNobleTiles(self: *Game, player: *pm.Player) !void {
+    fn checkNobleTiles(self: *Game, player: *pm.Player, p_number: usize) !void {
         // Check if player can claim any noble tiles
         var bonusCount = [5]u8{ 0, 0, 0, 0, 0 };
 
@@ -187,6 +187,8 @@ pub const Game = struct {
 
                 // Remove the claimed noble tile from the game
                 _ = self.nobleTiles.orderedRemove(index);
+
+                std.debug.print("Player {} earned a visit from {s}\n\n", .{ p_number, tile.name });
             }
         }
     }
@@ -216,7 +218,7 @@ pub const Game = struct {
         }
     }
 
-    pub fn playerTurn(self: *Game, player: *pm.Player, p_number: u8) !void {
+    pub fn playerTurn(self: *Game, player: *pm.Player, p_number: usize) !void {
         // Example turn sequence:
         // In a real game, you would take input from the player
         // Here, we'll simulate a simple token-taking action for demonstration
@@ -256,7 +258,7 @@ pub const Game = struct {
         player.print();
 
         // Check if the player can claim any noble tiles
-        try self.checkNobleTiles(player);
+        try self.checkNobleTiles(player, p_number);
     }
 };
 
