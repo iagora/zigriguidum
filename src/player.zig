@@ -37,7 +37,7 @@ pub const Player = struct {
     pub fn play(self: Player, gameState: gm.Game) am.Action {
         var affordableCard: TargetCard = TargetCard{ .card = null, .prestige = 0, .missingTokens = 999, .fromReserve = false };
         var goalCard: TargetCard = TargetCard{ .card = null, .prestige = 0, .missingTokens = 999, .fromReserve = false };
-        const tooMuchTokens: usize = 6;
+        const tooMuchTokens: usize = 5;
 
         // Find the best card to aim for
         for (self.reservedCards.items) |card| {
