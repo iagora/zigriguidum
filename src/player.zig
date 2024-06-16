@@ -11,9 +11,8 @@ pub const Player = struct {
     reservedCards: std.ArrayList(cm.DevelopmentCard),
     prestigePoints: u8,
     nobleTiles: std.ArrayList(nm.NobleTile),
-    isAI: bool,
 
-    pub fn create(isAI: bool, allocator: std.mem.Allocator) Player {
+    pub fn create(allocator: std.mem.Allocator) Player {
         const player = Player{
             .tokens = [5]u8{ 0, 0, 0, 0, 0 },
             .goldTokens = 0,
@@ -21,7 +20,6 @@ pub const Player = struct {
             .reservedCards = std.ArrayList(cm.DevelopmentCard).init(allocator),
             .prestigePoints = 0,
             .nobleTiles = std.ArrayList(nm.NobleTile).init(allocator),
-            .isAI = isAI,
         };
         return player;
     }

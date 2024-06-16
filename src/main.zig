@@ -9,7 +9,7 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var players = [_]pm.Player{ pm.Player.create(true, allocator), pm.Player.create(true, allocator) };
+    var players = [_]pm.Player{ pm.Player.create(allocator), pm.Player.create(allocator) };
 
     // Initialize game state
     var game: gm.Game = gm.Game.initialize(&players, allocator) catch |err| {
