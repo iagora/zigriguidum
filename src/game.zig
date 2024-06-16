@@ -124,7 +124,7 @@ pub const Game = struct {
         // Calculate the cost after considering player's gem bonuses
         var remainingCost = card.cost;
         for (player.purchasedCards.items) |pCard| {
-            remainingCost[@intFromEnum(pCard.gemBonus)] -= 1;
+            remainingCost[@intFromEnum(pCard.gemBonus)] -|= 1; // saturated subtraction so I can keep the unsigned int
         }
 
         // Check if the player has enough tokens (including gold tokens)
@@ -228,7 +228,11 @@ pub const Game = struct {
 
     pub fn print(self: Game) void {
         std.debug.print("Begin: Round {}\n\n", .{self.round});
-        std.debug.print("\tGem Tokens: {any}\tGold Tokens: {}\n\n", .{ self.gemTokens, self.goldTokens });
+        std.debug.print("\tNobles:", .{});
+        for (self.nobleTiles.items) |noble| {
+            std.debug.print("\t{any}", .{noble.requirements});
+        }
+        std.debug.print("\n\tGem Tokens: {any}\tGold Tokens: {}\n\n", .{ self.gemTokens, self.goldTokens });
         // Reveal cards for each tier
         for (0..3) |t| {
             std.debug.print("Tier {}:\n", .{t + 1});

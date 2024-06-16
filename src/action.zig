@@ -24,7 +24,7 @@ pub const Action = struct {
     pub fn reserveCard(cardIndex: usize, tier: u8) Action {
         return Action{
             .actionType = ActionType.ReserveCard,
-            .tokens = [5]u8{},
+            .tokens = [5]u8{ 0, 0, 0, 0, 0 },
             .cardIndex = cardIndex,
             .tier = tier,
             .fromReserve = null,
@@ -34,7 +34,7 @@ pub const Action = struct {
     pub fn purchaseCard(cardIndex: usize, tier: u8, fromReserve: bool) Action {
         return Action{
             .actionType = ActionType.PurchaseCard,
-            .tokens = [5]u8{},
+            .tokens = [5]u8{ 0, 0, 0, 0, 0 },
             .cardIndex = cardIndex,
             .tier = tier,
             .fromReserve = fromReserve,

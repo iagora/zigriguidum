@@ -35,7 +35,7 @@ pub fn main() !void {
 
             // Perform player turn
             game.turn(action, p, pn) catch |err| {
-                std.debug.print("Error during player {}'s turn: {}\n", .{ pn, err });
+                std.debug.print("Error during player {}'s turn:\nAction: {any}\nError:{}\n", .{ pn, action, err });
             };
         }
         if (game.round >= 100) {
