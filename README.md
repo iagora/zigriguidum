@@ -1,6 +1,6 @@
 # 💎 zplendor
 
-<img src="zplendor_small.png" alt="zplendor ai logo">
+<img src="zplendor-small.png" alt="zplendor ai logo">
 
 > zplendor is me coding splendor rules into zig, so I can write some basic AI,
 perhaps train an actual ML model to play, so I can pull some stats out of the AI
