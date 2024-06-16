@@ -4,6 +4,14 @@ const nm = @import("nobles.zig");
 const am = @import("action.zig");
 const gm = @import("game.zig");
 
+const TargetCard = struct {
+    card: ?cm.DevelopmentCard,
+    cardIndex: usize,
+    tier: u8,
+    prestige: u8,
+    missingTokens: usize,
+};
+
 pub const Player = struct {
     tokens: [5]u8, // Number of each type of gem tokens
     goldTokens: u8,
@@ -25,11 +33,9 @@ pub const Player = struct {
     }
 
     pub fn play(self: Player, gameState: gm.Game) am.Action {
-        var bestCard: ?cm.DevelopmentCard = null;
-        var bestCardIndex: usize = 0;
-        var bestTier: u8 = 0;
-        var highestPrestige: u8 = 0;
-        var minMissingTokens: usize = 6;
+        var bestCard: TargetCard = TargetCard{ .card = null, .cardIndex = undefined, .tier = undefined, .prestige = 0, .missingTokens = 999 };
+        var goalCard: TargetCard = TargetCard{ .card = null, .cardIndex = undefined, .tier = undefined, .prestige = 0, .missingTokens = 999 };
+        const tooMuchTokens: usize = 6;
 
         // Find the best card to aim for
         for (self.reservedCards.items, 0..) |card, index| {
@@ -55,17 +61,17 @@ pub const Player = struct {
             }
 
             // Check if this card is better
-            if (affordable and card.prestigePoints > highestPrestige) {
-                bestCard = card;
-                bestCardIndex = index;
-                bestTier = 3;
-                highestPrestige = card.prestigePoints;
-                minMissingTokens = missingTokens;
-            } else if (affordable and card.prestigePoints == highestPrestige and missingTokens < minMissingTokens) {
-                bestCard = card;
-                bestCardIndex = index;
-                bestTier = 3;
-                minMissingTokens = missingTokens;
+            if (affordable and card.prestigePoints > bestCard.prestige) {
+                bestCard.card = card;
+                bestCard.cardIndex = index;
+                bestCard.tier = 4;
+                bestCard.prestige = card.prestigePoints;
+                bestCard.missingTokens = missingTokens;
+            } else if (affordable and card.prestigePoints == bestCard.prestige and missingTokens < bestCard.missingTokens) {
+                bestCard.card = card;
+                bestCard.cardIndex = index;
+                bestCard.tier = 4;
+                bestCard.missingTokens = missingTokens;
             }
         }
         for (0..3) |t| {
@@ -93,23 +99,30 @@ pub const Player = struct {
                 }
 
                 // Check if this card is better
-                if (affordable and card.prestigePoints > highestPrestige) {
-                    bestCard = card;
-                    bestCardIndex = index;
-                    bestTier = @intCast(2 - t);
-                    highestPrestige = card.prestigePoints;
-                    minMissingTokens = missingTokens;
-                } else if (affordable and card.prestigePoints == highestPrestige and missingTokens < minMissingTokens) {
-                    bestCard = card;
-                    bestCardIndex = index;
-                    bestTier = @intCast(2 - t);
-                    minMissingTokens = missingTokens;
+                if (affordable and card.prestigePoints > bestCard.prestige) {
+                    bestCard.card = card;
+                    bestCard.cardIndex = index;
+                    bestCard.tier = @intCast(2 - t + 1);
+                    bestCard.prestige = card.prestigePoints;
+                    bestCard.missingTokens = missingTokens;
+                } else if (affordable and card.prestigePoints == bestCard.prestige and missingTokens < bestCard.missingTokens) {
+                    bestCard.card = card;
+                    bestCard.cardIndex = index;
+                    bestCard.tier = @intCast(2 - t + 1);
+                    bestCard.missingTokens = missingTokens;
+                }
+                // Check if this card is a good goal
+                if (card.prestigePoints >= goalCard.prestige and missingTokens < tooMuchTokens) {
+                    goalCard.card = card;
+                    goalCard.cardIndex = index;
+                    goalCard.tier = @intCast(2 - t + 1);
+                    goalCard.missingTokens = missingTokens;
                 }
             }
         }
 
         // If a card is affordable, buy it
-        if (bestCard) |card| {
+        if (bestCard.card) |card| {
             // Calculate missing tokens
             var effectiveCost = card.cost;
             for (self.purchasedCards.items) |pCard| {
@@ -125,25 +138,14 @@ pub const Player = struct {
                 }
             }
             // If we can afford the card with gold tokens
-            if (minMissingTokens <= self.goldTokens) {
-                if (bestTier == 3) return am.Action.purchaseCard(bestCardIndex, bestTier, true);
-                return am.Action.purchaseCard(bestCardIndex, bestTier + 1, false);
+            if (bestCard.missingTokens <= self.goldTokens) {
+                if (bestCard.tier == 4) return am.Action.purchaseCard(bestCard.cardIndex, bestCard.tier, true);
+                return am.Action.purchaseCard(bestCard.cardIndex, bestCard.tier, false);
             }
-
-            // If we need to take tokens
-            neededColors = self.adjustTokensForLimit(neededColors, bestCard);
-            if (std.mem.eql(u8, &neededColors, &[5]u8{ 0, 0, 0, 0, 0 }) and bestCard != null) return am.Action.reserveCard(bestCardIndex, bestTier);
-            return am.Action.takeTokens(neededColors);
         }
 
         // If no card is affordable, reserve the best card
-        if (bestCard) |_| {
-            // Reserve the card we are aiming for
-            if (self.reservedCards.items.len < 3) {
-                return am.Action.reserveCard(bestCardIndex, bestTier);
-            }
-
-            // If already have 3 reserved cards, fallback to taking tokens
+        if (goalCard.card) |_| {
             var tokensToTake = [5]u8{ 0, 0, 0, 0, 0 };
             var tokensTaken: u8 = 0;
             for (0..5) |colorIndex| {
@@ -152,8 +154,8 @@ pub const Player = struct {
                     tokensTaken += 1;
                 }
             }
-            tokensToTake = self.adjustTokensForLimit(tokensToTake, bestCard);
-            if (std.mem.eql(u8, &tokensToTake, &[5]u8{ 0, 0, 0, 0, 0 }) and bestCard != null) return am.Action.reserveCard(bestCardIndex, bestTier);
+            tokensToTake = self.adjustTokensForLimit(tokensToTake, goalCard.card);
+            if (std.mem.eql(u8, &tokensToTake, &[5]u8{ 0, 0, 0, 0, 0 }) and goalCard.card != null) return am.Action.reserveCard(goalCard.cardIndex, goalCard.tier);
             return am.Action.takeTokens(tokensToTake);
         }
 
@@ -167,8 +169,8 @@ pub const Player = struct {
             }
         }
 
-        tokensToTake = self.adjustTokensForLimit(tokensToTake, bestCard);
-        if (std.mem.eql(u8, &tokensToTake, &[5]u8{ 0, 0, 0, 0, 0 }) and bestCard != null) return am.Action.reserveCard(bestCardIndex, bestTier);
+        tokensToTake = self.adjustTokensForLimit(tokensToTake, bestCard.card);
+        if (std.mem.eql(u8, &tokensToTake, &[5]u8{ 0, 0, 0, 0, 0 }) and bestCard.card != null) return am.Action.reserveCard(bestCard.cardIndex, bestCard.tier);
         return am.Action.takeTokens(tokensToTake);
     }
 
