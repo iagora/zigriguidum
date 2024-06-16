@@ -7,37 +7,29 @@ pub const ActionType = enum {
 pub const Action = struct {
     actionType: ActionType,
     tokens: [5]u8, // For TakeTokens
-    cardIndex: ?usize, // For ReserveCard and PurchaseCard
-    tier: ?u8, // For ReserveCard and PurchaseCard
-    fromReserve: ?bool, // For PurchaseCard
+    cardID: ?u128, // For ReserveCard and PurchaseCard
 
     pub fn takeTokens(tokens: [5]u8) Action {
         return Action{
             .actionType = ActionType.TakeTokens,
             .tokens = tokens,
-            .cardIndex = null,
-            .tier = null,
-            .fromReserve = null,
+            .cardID = null,
         };
     }
 
-    pub fn reserveCard(cardIndex: usize, tier: u8) Action {
+    pub fn reserveCard(cardID: u128) Action {
         return Action{
             .actionType = ActionType.ReserveCard,
             .tokens = [5]u8{ 0, 0, 0, 0, 0 },
-            .cardIndex = cardIndex,
-            .tier = tier,
-            .fromReserve = null,
+            .cardID = cardID,
         };
     }
 
-    pub fn purchaseCard(cardIndex: usize, tier: u8, fromReserve: bool) Action {
+    pub fn purchaseCard(cardID: u128) Action {
         return Action{
             .actionType = ActionType.PurchaseCard,
             .tokens = [5]u8{ 0, 0, 0, 0, 0 },
-            .cardIndex = cardIndex,
-            .tier = tier,
-            .fromReserve = fromReserve,
+            .cardID = cardID,
         };
     }
 };

@@ -6,13 +6,12 @@ const gm = @import("game.zig");
 
 const TargetCard = struct {
     card: ?cm.DevelopmentCard,
-    cardIndex: usize,
-    tier: u8,
     prestige: u8,
     missingTokens: usize,
 };
 
 pub const Player = struct {
+    id: u128,
     tokens: [5]u8, // Number of each type of gem tokens
     goldTokens: u8,
     purchasedCards: std.ArrayList(cm.DevelopmentCard),
@@ -21,7 +20,9 @@ pub const Player = struct {
     nobleTiles: std.ArrayList(nm.NobleTile),
 
     pub fn create(allocator: std.mem.Allocator) Player {
+        const rand = std.crypto.random;
         const player = Player{
+            .id = rand.int(u128),
             .tokens = [5]u8{ 0, 0, 0, 0, 0 },
             .goldTokens = 0,
             .purchasedCards = std.ArrayList(cm.DevelopmentCard).init(allocator),
@@ -33,12 +34,12 @@ pub const Player = struct {
     }
 
     pub fn play(self: Player, gameState: gm.Game) am.Action {
-        var bestCard: TargetCard = TargetCard{ .card = null, .cardIndex = undefined, .tier = undefined, .prestige = 0, .missingTokens = 999 };
-        var goalCard: TargetCard = TargetCard{ .card = null, .cardIndex = undefined, .tier = undefined, .prestige = 0, .missingTokens = 999 };
+        var affordableCard: TargetCard = TargetCard{ .card = null, .prestige = 0, .missingTokens = 999 };
+        var goalCard: TargetCard = TargetCard{ .card = null, .prestige = 0, .missingTokens = 999 };
         const tooMuchTokens: usize = 6;
 
         // Find the best card to aim for
-        for (self.reservedCards.items, 0..) |card, index| {
+        for (self.reservedCards.items) |card| {
             var missingTokens: usize = 0;
             var affordable = true;
 
@@ -61,17 +62,20 @@ pub const Player = struct {
             }
 
             // Check if this card is better
-            if (affordable and card.prestigePoints > bestCard.prestige) {
-                bestCard.card = card;
-                bestCard.cardIndex = index;
-                bestCard.tier = 4;
-                bestCard.prestige = card.prestigePoints;
-                bestCard.missingTokens = missingTokens;
-            } else if (affordable and card.prestigePoints == bestCard.prestige and missingTokens < bestCard.missingTokens) {
-                bestCard.card = card;
-                bestCard.cardIndex = index;
-                bestCard.tier = 4;
-                bestCard.missingTokens = missingTokens;
+            if (affordable and card.prestigePoints > affordableCard.prestige) {
+                affordableCard.card = card;
+                affordableCard.prestige = card.prestigePoints;
+                affordableCard.missingTokens = missingTokens;
+            } else if (affordable and card.prestigePoints == affordableCard.prestige and missingTokens < affordableCard.missingTokens) {
+                affordableCard.card = card;
+                affordableCard.prestige = card.prestigePoints; // useless here, but I need to stop myself wondering why it's missing and wasting time
+                affordableCard.missingTokens = missingTokens;
+            }
+            // Check if this card is a good goal
+            if (card.prestigePoints >= goalCard.prestige and missingTokens < goalCard.missingTokens and missingTokens < tooMuchTokens) {
+                goalCard.card = card;
+                goalCard.prestige = card.prestigePoints;
+                goalCard.missingTokens = missingTokens;
             }
         }
         for (0..3) |t| {
@@ -99,30 +103,28 @@ pub const Player = struct {
                 }
 
                 // Check if this card is better
-                if (affordable and card.prestigePoints > bestCard.prestige) {
-                    bestCard.card = card;
-                    bestCard.cardIndex = index;
-                    bestCard.tier = @intCast(2 - t + 1);
-                    bestCard.prestige = card.prestigePoints;
-                    bestCard.missingTokens = missingTokens;
-                } else if (affordable and card.prestigePoints == bestCard.prestige and missingTokens < bestCard.missingTokens) {
-                    bestCard.card = card;
-                    bestCard.cardIndex = index;
-                    bestCard.tier = @intCast(2 - t + 1);
-                    bestCard.missingTokens = missingTokens;
+                if (affordable and card.prestigePoints > affordableCard.prestige) {
+                    affordableCard.card = card;
+                    affordableCard.prestige = card.prestigePoints;
+                    affordableCard.missingTokens = missingTokens;
+                } else if (affordable and card.prestigePoints == affordableCard.prestige and missingTokens < affordableCard.missingTokens) {
+                    affordableCard.card = card;
+                    affordableCard.prestige = card.prestigePoints; // useless here, but I need to stop myself wondering why it's missing and wasting time
+                    affordableCard.missingTokens = missingTokens;
                 }
                 // Check if this card is a good goal
-                if (card.prestigePoints >= goalCard.prestige and missingTokens < tooMuchTokens) {
+                if (card.prestigePoints >= goalCard.prestige and missingTokens < goalCard.missingTokens and missingTokens < tooMuchTokens) {
                     goalCard.card = card;
-                    goalCard.cardIndex = index;
-                    goalCard.tier = @intCast(2 - t + 1);
+                    goalCard.prestige = card.prestigePoints;
                     goalCard.missingTokens = missingTokens;
                 }
             }
         }
 
+        // TODO: add logic to decide weather to aim for affordable or goal
+
         // If a card is affordable, buy it
-        if (bestCard.card) |card| {
+        if (affordableCard.card) |card| {
             // Calculate missing tokens
             var effectiveCost = card.cost;
             for (self.purchasedCards.items) |pCard| {
@@ -138,14 +140,13 @@ pub const Player = struct {
                 }
             }
             // If we can afford the card with gold tokens
-            if (bestCard.missingTokens <= self.goldTokens) {
-                if (bestCard.tier == 4) return am.Action.purchaseCard(bestCard.cardIndex, bestCard.tier, true);
-                return am.Action.purchaseCard(bestCard.cardIndex, bestCard.tier, false);
+            if (affordableCard.missingTokens <= self.goldTokens) {
+                return am.Action.purchaseCard(card.id);
             }
         }
 
         // If no card is affordable, reserve the best card
-        if (goalCard.card) |_| {
+        if (goalCard.card) |card| {
             var tokensToTake = [5]u8{ 0, 0, 0, 0, 0 };
             var tokensTaken: u8 = 0;
             for (0..5) |colorIndex| {
@@ -155,7 +156,7 @@ pub const Player = struct {
                 }
             }
             tokensToTake = self.adjustTokensForLimit(tokensToTake, goalCard.card);
-            if (std.mem.eql(u8, &tokensToTake, &[5]u8{ 0, 0, 0, 0, 0 }) and goalCard.card != null) return am.Action.reserveCard(goalCard.cardIndex, goalCard.tier);
+            if (std.mem.eql(u8, &tokensToTake, &[5]u8{ 0, 0, 0, 0, 0 }) and goalCard.card != null) return am.Action.reserveCard(card.id);
             return am.Action.takeTokens(tokensToTake);
         }
 
@@ -169,8 +170,12 @@ pub const Player = struct {
             }
         }
 
-        tokensToTake = self.adjustTokensForLimit(tokensToTake, bestCard.card);
-        if (std.mem.eql(u8, &tokensToTake, &[5]u8{ 0, 0, 0, 0, 0 }) and bestCard.card != null) return am.Action.reserveCard(bestCard.cardIndex, bestCard.tier);
+        tokensToTake = self.adjustTokensForLimit(tokensToTake, goalCard.card);
+        var sum: usize = 0;
+        for (tokensToTake) |value| {
+            sum += value;
+        }
+        if (sum <= 1) if (goalCard.card) |card| return am.Action.reserveCard(card.id);
         return am.Action.takeTokens(tokensToTake);
     }
 
@@ -189,10 +194,10 @@ pub const Player = struct {
             return tokens;
         }
 
-        if (targetCard) |bestCard| {
+        if (targetCard) |tCard| {
             // Determine needed tokens for best card
             var neededTokens = [5]u8{ 0, 0, 0, 0, 0 };
-            var effectiveCost = bestCard.cost;
+            var effectiveCost = tCard.cost;
             for (self.purchasedCards.items) |pCard| {
                 effectiveCost[@intFromEnum(pCard.gemBonus)] -= @min(effectiveCost[@intFromEnum(pCard.gemBonus)], 1);
             }

@@ -85,22 +85,25 @@ pub const Game = struct {
         }
     }
 
-    fn reserveCard(self: *Game, player: *pm.Player, cardIndex: usize, tier: u8) !void {
+    fn reserveCard(self: *Game, player: *pm.Player, cardID: u128) !void {
         // Logic for reserving a card
         // Ensure the action is valid
-        if (tier < 1 or tier > 3) {
-            return error.InvalidTier;
+        var cIdx: usize = undefined;
+        var card: cm.DevelopmentCard = undefined;
+        blk: for (0..3) |t| {
+            for (self.developmentCards[t].items, 0..) |devCard, idx| {
+                if (devCard.id == cardID) {
+                    cIdx = idx;
+                    card = devCard;
+                    break :blk;
+                }
+            }
         }
-        if (cardIndex >= self.developmentCards[tier - 1].items.len or cardIndex >= 4) {
-            return error.InvalidCardIndex;
-        }
-
         // Reserve the card
-        const card = self.developmentCards[tier - 1].items[cardIndex];
         try player.reservedCards.append(card);
 
         // Remove the card from the grid
-        _ = self.developmentCards[tier - 1].orderedRemove(cardIndex);
+        _ = self.developmentCards[card.tier - 1].orderedRemove(cIdx);
 
         // Give the player a gold token if available
         if (self.goldTokens > 0) {
@@ -109,16 +112,28 @@ pub const Game = struct {
         }
     }
 
-    fn purchaseCard(self: *Game, player: *pm.Player, cardIndex: usize, tier: u8, fromReserve: bool) !void {
+    fn purchaseCard(self: *Game, player: *pm.Player, cardID: u128) !void {
         // Logic for purchasing a card
         // Select the card from the appropriate source
-        const card: cm.DevelopmentCard = if (fromReserve) blk: {
-            if (cardIndex >= player.reservedCards.items.len) return error.InvalidCardIndex;
-            break :blk player.reservedCards.items[cardIndex];
-        } else eblk: {
-            if (tier < 1 or tier > 3) return error.InvalidTier;
-            if (cardIndex >= self.developmentCards[tier - 1].items.len or cardIndex >= 4) return error.InvalidCardIndex;
-            break :eblk self.developmentCards[tier - 1].items[cardIndex];
+        var fromReserve: bool = false;
+        var cIdx: usize = undefined;
+        const card: cm.DevelopmentCard = blk: {
+            for (player.reservedCards.items, 0..) |card, idx| {
+                if (card.id == cardID) {
+                    cIdx = idx;
+                    fromReserve = true;
+                    break :blk card;
+                }
+            }
+            for (0..3) |t| {
+                for (self.developmentCards[t].items, 0..) |devCard, idx| {
+                    if (devCard.id == cardID) {
+                        cIdx = idx;
+                        break :blk devCard;
+                    }
+                }
+            }
+            return error.CardNotFound;
         };
 
         // Calculate the cost after considering player's gem bonuses
@@ -157,9 +172,9 @@ pub const Game = struct {
 
         // Remove the card from the appropriate source
         if (fromReserve) {
-            _ = player.reservedCards.orderedRemove(cardIndex);
+            _ = player.reservedCards.orderedRemove(cIdx);
         } else {
-            _ = self.developmentCards[tier - 1].orderedRemove(cardIndex);
+            _ = self.developmentCards[card.tier - 1].orderedRemove(cIdx);
         }
     }
 
@@ -243,10 +258,16 @@ pub const Game = struct {
         }
     }
 
-    pub fn turn(self: *Game, action: am.Action, player: *pm.Player, pNumber: usize) !void {
+    pub fn turn(self: *Game, action: am.Action, player: *pm.Player) !void {
         // Example turn sequence:
         // In a real game, you would take input from the player
         // Here, we'll simulate a simple token-taking action for demonstration
+        const pNumber = blk: {
+            for (self.players, 1..) |p, idx| {
+                if (player.id == p.id) break :blk idx;
+            }
+            return error.PlayerNotFound;
+        };
 
         switch (action.actionType) {
             am.ActionType.TakeTokens => {
@@ -256,13 +277,13 @@ pub const Game = struct {
             },
             am.ActionType.ReserveCard => {
                 // Simulate reserving a card from tier 1, index 0
-                try self.reserveCard(player, action.cardIndex.?, action.tier.?);
+                try self.reserveCard(player, action.cardID.?);
                 std.debug.print("Player {} reserved a card\n\n", .{pNumber});
             },
             am.ActionType.PurchaseCard => {
                 // Simulate purchasing a card from tier 1, index 0
                 const fromReserve = false;
-                try self.purchaseCard(player, action.cardIndex.?, action.tier.?, action.fromReserve.?);
+                try self.purchaseCard(player, action.cardID.?);
                 if (fromReserve) {
                     std.debug.print("Player {} bought a card from reserve\n\n", .{pNumber});
                 } else {

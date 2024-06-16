@@ -35,7 +35,7 @@ pub fn main() !void {
             const action = p.play(gameState);
 
             // Perform player turn
-            game.turn(action, p, pn) catch |err| {
+            game.turn(action, p) catch |err| {
                 std.debug.print("Error during player {}'s turn:\nAction: {any}\nError:{}\n", .{ pn, action, err });
             };
         }
