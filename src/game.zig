@@ -205,6 +205,8 @@ pub const Game = struct {
                 _ = self.nobleTiles.orderedRemove(index);
 
                 std.debug.print("Player {} earned a visit from {s}\n\n", .{ pNumber, tile.name });
+
+                return; // TODO: this should trigger player choice of noble
             }
         }
     }
