@@ -194,8 +194,6 @@ pub const Player = struct {
                 }
             }
 
-            std.debug.print("{any}\n", .{card.cost});
-            std.debug.print("{any}\n", .{neededColors});
             var tokensToTake: [5]u8 = [5]u8{ 0, 0, 0, 0, 0 };
             var sum: usize = 0;
             var nColors: usize = 0;
@@ -221,10 +219,8 @@ pub const Player = struct {
                     }
                 }
             }
-            std.debug.print("{any}\n", .{tokensToTake});
 
             tokensToTake = self.adjustTokensForLimit(tokensToTake, goalCard.card);
-            std.debug.print("{any}\n", .{tokensToTake});
             sum = 0;
             for (tokensToTake) |value| {
                 sum += value;
