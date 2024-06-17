@@ -83,7 +83,7 @@ pub const nobles = [_]NobleTile{
     },
     NobleTile{
         .id = undefined,
-        .name = "Barão de Mauá", // Francis I of France
+        .name = "Viscount of Mauá", // Francis I of France
         .requirements = [5]u8{ 3, 0, 3, 0, 3 },
         .prestigePoints = 3,
     },
