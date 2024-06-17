@@ -29,61 +29,61 @@ pub fn initialize(numPlayers: usize, allocator: std.mem.Allocator) !std.ArrayLis
 pub const nobles = [_]NobleTile{
     NobleTile{
         .id = undefined,
-        .name = "Mary Stuart",
+        .name = "Princess Isabel", // Mary Stuart
         .requirements = [5]u8{ 4, 0, 4, 0, 0 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "Charles V of the Holy Roman Empire",
+        .name = "Pedro II of Brazil", // Charles V of the Holy Roman Empire
         .requirements = [5]u8{ 0, 0, 3, 3, 3 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "Niccolo Machiavelli",
+        .name = "Machado de Assis",
         .requirements = [5]u8{ 0, 4, 0, 4, 0 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "Isabella I of Castile",
+        .name = "Anita Garibaldi", // Isabella I of Castille
         .requirements = [5]u8{ 0, 0, 0, 4, 4 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "Suleiman the Magnificent",
+        .name = "Juscelino Kubitschek", // Suleiman the Magnificent
         .requirements = [5]u8{ 4, 4, 0, 0, 0 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "Catherine of Medici",
+        .name = "Chiquinha Gonzaga", // Catherine of Medici
         .requirements = [5]u8{ 3, 3, 3, 0, 0 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "Anne of Britanny",
+        .name = "Dandara dos Palmares", // Anne of Britanny
         .requirements = [5]u8{ 3, 3, 0, 3, 0 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "King Henry VIII of England",
+        .name = "Getúlio Vargas", // King Henry VIII of England
         .requirements = [5]u8{ 4, 0, 0, 0, 4 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "Elisabeth of Austria, Queen of France",
+        .name = "Maria Quitéria", // Elisabeth of Austria, Queen of France
         .requirements = [5]u8{ 0, 3, 0, 3, 3 },
         .prestigePoints = 3,
     },
     NobleTile{
         .id = undefined,
-        .name = "Francis I of France",
+        .name = "Tiradentes", // Francis I of France
         .requirements = [5]u8{ 3, 0, 3, 0, 3 },
         .prestigePoints = 3,
     },
